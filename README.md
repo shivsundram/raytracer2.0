@@ -12,4 +12,9 @@ Coming Soon:
 -soft shadows
 -more...  
 
+Requirements:
+cmake
+Eigen
+
+
 ![Badass](http://i.imgur.com/y2abqpF.png "Badass")
