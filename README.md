@@ -7,7 +7,7 @@
 - ~1M triangles and 2 spheres
 
 
-Coming Soon:
+Coming Soon:  
 -parallel rendering  
 -more...  
 
