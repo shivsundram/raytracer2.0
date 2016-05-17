@@ -8,9 +8,7 @@
 
 
 Coming Soon:
-
--parallel rendering
-
--more...
+-parallel rendering  
+-more...  
 
 ![Badass](http://i.imgur.com/y2abqpF.png "Badass")
