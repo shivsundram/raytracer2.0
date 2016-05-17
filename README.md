@@ -9,6 +9,7 @@
 
 Coming Soon:  
 -parallel rendering  
+-soft shadows
 -more...  
 
 ![Badass](http://i.imgur.com/y2abqpF.png "Badass")
