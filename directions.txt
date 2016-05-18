@@ -2,6 +2,10 @@
 How To Build: use following command in "raytracer" directory 
 g++ main.cpp lodepng.cpp -I eigen -O3 -o raytrace
 
+How to Build with cmake in "raytracer directory"
+cmake .
+make
+
 How to Execute: 
 ./raytrace [filename.txt] [pixel width] [pixel height] [depth] [sqrt(samples/pixel)]
 
@@ -11,6 +15,7 @@ Example:
 External Dependencies:
 -Eigen 
 -lodepng
+-cmake (optional)
 
 Citations and references are made throughout the code
 
