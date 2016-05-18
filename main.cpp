@@ -38,7 +38,7 @@ Eigen::Vector4d yvec; // vertical basis vector of focal plane
 int height = 1000;
 int width = 1000;
 int depth = 10;
-int sqrtSsamplePerPixel= 4;
+int sqrtSsamplePerPixel= 1;
 
 AABBNode rootAABB;
 
