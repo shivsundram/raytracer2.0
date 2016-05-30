@@ -263,7 +263,6 @@ void parseLine(const string& line) {
         checkNumArguments(tokens, 6);
         // there is an optional argument
         double falloff = 0.0;
-        //
         if (tokens.size() - 1 > 6) {
             falloff = atof(tokens[7].c_str());
         }
@@ -338,6 +337,7 @@ void parseLine(const string& line) {
         }
 
     }else if (tokens[0] == "lta") {
+        //Area lights, used to generate soft shadows
         checkNumArguments(tokens, 10);
         //source point. define parallelogram by src point and two corner points
         Eigen::Vector4d* source = new Eigen::Vector4d(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str()), 1.0);
@@ -474,6 +474,8 @@ int main(int argc, const char * argv[]) {
     timestamp_t t0 = get_timestamp();
 
     double skwiggle = 0.0;
+                //if using anti aliasing, better to use anti-aliasing loops on top for omp
+                //to get better load balancing between threads
     #pragma omp parallel for collapse(2) private (temp, result, aax, aay, skwiggle) shared(pixelCount)
     for (int p = 0; p < sqrtSsamplePerPixel; p++) {
         for (int q = 0; q < sqrtSsamplePerPixel; q++) {
@@ -483,10 +485,8 @@ int main(int argc, const char * argv[]) {
                     if ( (pixelCount) % (fraction) == 0 ) {
                         cout << (int) (pixelCount * totalPixelsScale) << "%" << endl;
                     }
-                //if using anti aliasing, better to use anti-aliasing loops on top for omp
-                //to get better load balancing between threads
-//            for (int p = 0; p < sqrtSsamplePerPixel; p++) {
-//                for (int q = 0; q < sqrtSsamplePerPixel; q++) {
+                        //for (int p = 0; p < sqrtSsamplePerPixel; p++) {
+                        //  for (int q = 0; q < sqrtSsamplePerPixel; q++) {
 
                     skwiggle = (double) rand() /  RAND_MAX;
                     aax = (p + skwiggle) / sqrtSsamplePerPixel;
