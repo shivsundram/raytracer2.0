@@ -474,8 +474,8 @@ int main(int argc, const char * argv[]) {
     timestamp_t t0 = get_timestamp();
 
     double skwiggle = 0.0;
-                //if using anti aliasing, better to use anti-aliasing loops on top for omp
-                //to get better load balancing between threads
+    //if using anti aliasing, better to use anti-aliasing loops on top for omp
+    //to get better load balancing between threads
     #pragma omp parallel for collapse(2) private (temp, result, aax, aay, skwiggle) shared(pixelCount)
     for (int p = 0; p < sqrtSsamplePerPixel; p++) {
         for (int q = 0; q < sqrtSsamplePerPixel; q++) {
