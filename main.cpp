@@ -463,8 +463,9 @@ int main(int argc, const char * argv[]) {
     Film negative(width, height);
 
     int pixelCount = 0;
-    int fraction = width * height / 10;
-    double totalPixelsScale = 100.0 / (width * height);
+    int ss = sqrtSsamplePerPixel*sqrtSsamplePerPixel;
+    int fraction = ss*width * height / 10;
+    double totalPixelsScale = 100.0 / (width * height*ss);
     int currRandomIndex = 0;
     double aax, aay;
     Ray temp;
@@ -473,16 +474,17 @@ int main(int argc, const char * argv[]) {
     timestamp_t t0 = get_timestamp();
 
     double skwiggle = 0.0;
-
-    #pragma omp parallel for collapse(2) private (temp, result, aax, aay, skwiggle) firstprivate(pixelCount)
+    #pragma omp parallel for collapse(2) private (temp, result, aax, aay, skwiggle) shared(pixelCount)
     for (int p = 0; p < sqrtSsamplePerPixel; p++) {
         for (int q = 0; q < sqrtSsamplePerPixel; q++) {
             for (int i = 0; i < width; i++){
                 for (int j = 0; j < height; j++){
                     pixelCount++;
-                    if (pixelCount % (fraction) == 0  && omp_get_thread_num()==0) {
+                    if ( (pixelCount) % (fraction) == 0 ) {
                         cout << (int) (pixelCount * totalPixelsScale) << "%" << endl;
                     }
+                //if using anti aliasing, better to use anti-aliasing loops on top for omp
+                //to get better load balancing between threads
 //            for (int p = 0; p < sqrtSsamplePerPixel; p++) {
 //                for (int q = 0; q < sqrtSsamplePerPixel; q++) {
 
