@@ -23,6 +23,7 @@
 #include "ObjParser.h"
 #include "AABBNode.h"
 
+#include <omp.h>
 
 using namespace std;
 
@@ -38,7 +39,7 @@ Eigen::Vector4d yvec; // vertical basis vector of focal plane
 int height = 1000;
 int width = 1000;
 int depth = 10;
-int sqrtSsamplePerPixel= 1;
+int sqrtSsamplePerPixel= 3;
 
 AABBNode rootAABB;
 
@@ -262,7 +263,8 @@ void parseLine(const string& line) {
         checkNumArguments(tokens, 6);
         // there is an optional argument
         double falloff = 0.0;
-        if (tokens.size() - 1 < 6) {
+        //
+        if (tokens.size() - 1 > 6) {
             falloff = atof(tokens[7].c_str());
         }
         Eigen::Vector4d* source = new Eigen::Vector4d(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str()), 1.0);
@@ -273,9 +275,6 @@ void parseLine(const string& line) {
         Eigen::Vector4d* source = new Eigen::Vector4d(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str()), 0.0);
         DLight* dirLight = new DLight(Color(atof(tokens[4].c_str()), atof(tokens[5].c_str()), atof(tokens[6].c_str())), *source);
         lights.push_back(dirLight);
-    } else if (tokens[0] == "lta") {
-        checkNumArguments(tokens, 3);
-        globalAmbient = ALight(globalAmbient.getColor() + Color(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str())));
     } else if (tokens[0] == "mat") {
         checkNumArguments(tokens, 13);
         currentMaterial.ambient = Color(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str()));
@@ -336,6 +335,34 @@ void parseLine(const string& line) {
                     primitives.push_back(new GeometricPrimitive(rectangle2, tiledMaterial, currentTransform));
                 }
             }
+        }
+
+    }else if (tokens[0] == "lta") {
+        checkNumArguments(tokens, 10);
+        //source point. define parallelogram by src point and two corner points
+        Eigen::Vector4d* source = new Eigen::Vector4d(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str()), 1.0);
+        //corner point 1
+        Eigen::Vector4d* c1 = new Eigen::Vector4d(atof(tokens[4].c_str()), atof(tokens[5].c_str()), atof(tokens[6].c_str()), 1.0);
+        //corner point 2
+        Eigen::Vector4d* c2 = new Eigen::Vector4d(atof(tokens[7].c_str()), atof(tokens[8].c_str()), atof(tokens[9].c_str()), 1.0);
+        //choose number of samples (light points) on area light 
+        int num_light_samples =  atof(tokens[13].c_str());
+        double falloff=0.0;// IMPLEMENT ME: falloff can be parsed as another arg if desired
+
+        //basis vectors of parallelogram
+        Eigen::Vector4d base_vector1 = (*c1) - (*source);
+        Eigen::Vector4d base_vector2 = (*c2) - (*source);
+        double skwiggle1 = 0.0;
+        double skwiggle2 = 0.0;
+        //generate psuedo random point lights on parallelogram to simulate area light
+        double nls = num_light_samples;
+        for (int lightIter = 0; lightIter < num_light_samples; lightIter++){
+            skwiggle1 = abs((double) rand() /  RAND_MAX);
+            skwiggle2 = abs((double) rand() /  RAND_MAX);
+            Eigen::Vector4d rand_point = *source + skwiggle1*(base_vector1) + skwiggle2*(base_vector2);
+            cout<<rand_point<<endl;
+            PLight* pointLight = new PLight(Color(atof(tokens[10].c_str())/nls, atof(tokens[11].c_str())/nls, atof(tokens[12].c_str())/nls), rand_point, falloff);
+            lights.push_back(pointLight);
         }
 
     } else if (tokens[0] == "xft") {
@@ -447,20 +474,26 @@ int main(int argc, const char * argv[]) {
 
     double skwiggle = 0.0;
 
-    for (int i = 0; i < width; i++){
-        for (int j = 0; j < height; j++){
-            pixelCount++;
-            if (pixelCount % fraction == 0) {
-                cout << (int) (pixelCount * totalPixelsScale) << "%" << endl;
-            }
-            for (int p = 0; p < sqrtSsamplePerPixel; p++) {
-                for (int q = 0; q < sqrtSsamplePerPixel; q++) {
+    #pragma omp parallel for collapse(2) private (temp, result, aax, aay, skwiggle) firstprivate(pixelCount)
+    for (int p = 0; p < sqrtSsamplePerPixel; p++) {
+        for (int q = 0; q < sqrtSsamplePerPixel; q++) {
+            for (int i = 0; i < width; i++){
+                for (int j = 0; j < height; j++){
+                    pixelCount++;
+                    if (pixelCount % (fraction) == 0  && omp_get_thread_num()==0) {
+                        cout << (int) (pixelCount * totalPixelsScale) << "%" << endl;
+                    }
+//            for (int p = 0; p < sqrtSsamplePerPixel; p++) {
+//                for (int q = 0; q < sqrtSsamplePerPixel; q++) {
+
                     skwiggle = (double) rand() /  RAND_MAX;
                     aax = (p + skwiggle) / sqrtSsamplePerPixel;
                     aay = (q + skwiggle) / sqrtSsamplePerPixel;
+
                     temp = generateRay((i + aax) / width, (j + aay) / height);
                     result = trace(temp, primitives, depth);
                     negative.commit(i, height - j - 1, result * 255.0f);
+
                 }
             }
         }
