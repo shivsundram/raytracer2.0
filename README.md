@@ -5,12 +5,8 @@
 - refractions
 - interpolated normals
 - ~1M triangles and 2 spheres
-
-
-Coming Soon:  
--parallel rendering  
+-parallel rendering with OpenMP
 -soft shadows
--more...  
 
 Requirements:
 cmake
